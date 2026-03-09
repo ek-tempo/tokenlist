@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tempo Tokenlist - Add New Tokens</title>
+  <style>
+    :root {
+      --bg: #0e0e10;
+      --surface: #1a1a1f;
+      --border: #2a2a30;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --text: #e4e4e7;
+      --text-muted: #a1a1aa;
+      --success: #22c55e;
+      --error: #ef4444;
+      --radius: 10px;
+    }
+    :root.light {
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --border: #d4d4d8;
+      --accent: #4f46e5;
+      --accent-hover: #6366f1;
+      --text: #18181b;
+      --text-muted: #71717a;
+      --success: #16a34a;
+      --error: #dc2626;
+    }
+    :root.light .copy-icon { filter: none; }
+    :root.light .token-table .token-icon { background: #eee; }
+    :root.light .drop-zone { color: var(--text-muted); }
+    :root.light input, :root.light select, :root.light textarea { background: var(--bg); }
+
+    .theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--text);
+      transition: background 0.15s, border-color 0.15s;
+      font-family: inherit;
+      font-weight: 500;
+    }
+    .theme-toggle:hover { border-color: var(--accent); }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .container { max-width: 720px; width: 100%; }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 32px;
+    }
+    .subtitle a { color: var(--accent); text-decoration: none; }
+    .subtitle a:hover { text-decoration: underline; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+    .card h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card h2 .badge {
+      font-size: 0.7rem;
+      background: var(--accent);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+
+    .field { margin-bottom: 18px; }
+    .field:last-child { margin-bottom: 0; }
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+    input::placeholder, textarea::placeholder { color: #555; }
+    input.invalid { border-color: var(--error); }
+    .hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .hint.error { color: var(--error); }
+
+    .row { display: flex; gap: 16px; }
+    .row .field { flex: 1; }
+
+    .icon-preview {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 10px;
+    }
+    .icon-preview img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #222;
+      object-fit: contain;
+    }
+    .icon-preview .placeholder {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #222;
+      border: 2px dashed var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      color: var(--text-muted);
+    }
+    .icon-preview span { font-size: 0.85rem; color: var(--text-muted); }
+
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(99,102,241,0.05);
+    }
+    .drop-zone input { display: none; }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    button {
+      padding: 11px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      font-family: inherit;
+    }
+    button:active { transform: scale(0.98); }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.05); }
+    .btn-copy {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 8px 16px;
+      font-size: 0.82rem;
+    }
+    .btn-copy:hover { background: rgba(99,102,241,0.1); }
+    .btn-danger {
+      background: var(--error);
+      color: #fff;
+    }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-success {
+      background: var(--success);
+      color: #fff;
+    }
+    .btn-success:hover { background: #16a34a; }
+
+    .github-section { margin-top: 0; }
+    .step-indicator {
+      display: flex;
+      gap: 0;
+      margin-bottom: 24px;
+    }
+    .step {
+      flex: 1;
+      text-align: center;
+      padding: 10px 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 3px solid var(--border);
+      transition: all 0.2s;
+    }
+    .step.active { color: var(--accent); border-color: var(--accent); }
+    .step.done { color: var(--success); border-color: var(--success); }
+    .step.error { color: var(--error); border-color: var(--error); }
+
+    .pr-status {
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      margin-top: 12px;
+    }
+    .pr-status.info { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3); }
+    .pr-status.success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); }
+    .pr-status.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--error); }
+    .pr-status a { color: var(--accent); }
+
+    .pr-log {
+      max-height: 160px;
+      overflow-y: auto;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      line-height: 1.8;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 12px;
+    }
+    .pr-log .log-line { color: var(--text-muted); }
+    .pr-log .log-line.ok { color: var(--success); }
+    .pr-log .log-line.err { color: var(--error); }
+    .pr-log .log-line.info { color: var(--accent); }
+
+    .token-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+    .token-input-row .field { flex: 1; margin-bottom: 0; }
+    .token-input-row button { margin-bottom: 0; flex-shrink: 0; height: 42px; }
+
+    .output-section { display: none; }
+    .output-section.visible { display: block; }
+    .output-section h2 { margin-bottom: 12px; }
+    .output-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+    .output-tab {
+      padding: 6px 16px;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      font-size: 0.82rem;
+      font-weight: 500;
+    }
+    .output-tab.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    pre {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      position: relative;
+    }
+    pre code { color: var(--text); }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--success);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* Current tokens table */
+    .token-table { width: 100%; border-collapse: collapse; }
+    .token-table th {
+      text-align: left;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .token-table td {
+      padding: 10px;
+      font-size: 0.88rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      text-align: left;
+    }
+    .token-table tr:last-child td { border-bottom: none; }
+    .token-table .token-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #222;
+      vertical-align: middle;
+    }
+    .token-table .addr {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .loading {
+      text-align: center;
+      padding: 24px;
+      color: var(--text-muted);
+    }
+    .copy-icon {
+      cursor: pointer;
+      opacity: 0.4;
+      transition: opacity 0.15s;
+      width: 14px;
+      height: 14px;
+      vertical-align: middle;
+      margin-left: 4px;
+      filter: invert(1);
+    }
+    .copy-icon:hover { opacity: 1; }
+
+    .staging-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .staging-actions .count {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+    .token-table input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .token-table .actions-cell {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .btn-sm.generate { background: var(--accent); color: #fff; }
+    .btn-sm.generate:hover { background: var(--accent-hover); }
+    .btn-sm.delete { background: transparent; color: var(--error); border: 1px solid var(--error); }
+    .btn-sm.delete:hover { background: rgba(239,68,68,0.1); }
+    .empty-staging {
+      text-align: center;
+      padding: 24px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .loading .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">☀️ Light</button>
+  <div class="container">
+    <h1>Tempo Tokenlist - Add New Tokens</h1>
+    <p class="subtitle">Add a new token to <a href="https://tokenlist.tempo.xyz/list/4217" target="_blank">Tempo Mainnet (Presto) — Chain 4217</a></p>
+
+    <!-- Current Tokens -->
+    <div class="card">
+      <h2>Current Tokenlist <span class="badge" id="tokenCount">…</span></h2>
+      <div id="currentTokens" class="loading"><span class="spinner"></span>Loading token list…</div>
+    </div>
+
+    <!-- Add Token Form -->
+    <form id="tokenForm" class="card">
+      <h2>Add New Token</h2>
+
+      <div class="field">
+        <label for="name">Token Name</label>
+        <input id="name" type="text" placeholder="e.g. Bridged USDC (Stargate)" required>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="symbol">Symbol</label>
+          <input id="symbol" type="text" placeholder="e.g. USDC.e" required>
+        </div>
+        <div class="field">
+          <label for="decimals">Decimals</label>
+          <input id="decimals" type="number" value="6" min="0" max="18" required>
+          <p class="hint">Tempo TIP-20 tokens use 6 decimals</p>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="address">Contract Address</label>
+        <input id="address" type="text" placeholder="0x20c0…" required>
+        <p class="hint" id="addressHint">Must be a valid hex address (0x + 40 hex chars)</p>
+      </div>
+
+      <div class="field">
+        <label for="logoURI">Logo URI (optional)</label>
+        <input id="logoURI" type="url" placeholder="https://… .svg or .png">
+        <p class="hint">Direct URL to the token icon, or upload an SVG below</p>
+      </div>
+
+      <div class="field">
+        <label>Upload Icon SVG (optional)</label>
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="svgFile" accept=".svg">
+          Drop an SVG file here or <strong>click to browse</strong>
+        </div>
+        <div class="icon-preview" id="iconPreview" style="display:none">
+          <img id="previewImg" src="" alt="icon preview">
+          <span id="previewName"></span>
+        </div>
+      </div>
+
+      <div class="card" style="background: var(--bg); padding: 18px; margin-top: 4px;">
+        <h2 style="font-size: 0.95rem;">Extensions</h2>
+        <div class="row">
+          <div class="field">
+            <label for="extChain">Chain</label>
+            <input id="extChain" type="text" value="tempo">
+          </div>
+          <div class="field">
+            <label for="extLabel">Label (optional)</label>
+            <input id="extLabel" type="text" placeholder="e.g. USDC">
+          </div>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top: 12px; padding-top: 18px; border-top: 1px dashed var(--border);">
+        <label for="pasteJson">Or Paste Token JSON</label>
+        <textarea id="pasteJson" rows="6" placeholder='{
+  "name": "My Token",
+  "symbol": "MTK",
+  "decimals": 6,
+  "chainId": 4217,
+  "address": "0x20c0...",
+  "extensions": { "chain": "tempo" }
+}'></textarea>
+        <div class="actions" style="margin-top: 8px;">
+          <button type="button" class="btn-secondary" onclick="importJSON()">Import JSON</button>
+        </div>
+        <p class="hint" id="pasteHint" style="margin-top:6px;"></p>
+      </div>
+
+      <div class="actions" style="margin-top: 20px;">
+        <button type="submit" class="btn-primary">Add to Staging</button>
+        <button type="button" class="btn-secondary" id="resetBtn">Reset</button>
+      </div>
+    </form>
+
+    <!-- Staging Area -->
+    <div class="card">
+      <h2>Staging Area <span class="badge" id="stagingCount">0</span></h2>
+      <div class="staging-actions" id="stagingBulkActions" style="display:none;">
+        <label style="font-size:0.82rem;color:var(--text-muted);display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this.checked)"> Select All
+        </label>
+        <button class="btn-sm generate" onclick="generateSelected()">Generate Selected</button>
+        <button class="btn-sm delete" onclick="deleteSelected()">Delete Selected</button>
+        <span class="count" id="selectedCount"></span>
+      </div>
+      <div id="stagingTable"></div>
+    </div>
+
+    <!-- Output -->
+    <div class="output-section" id="outputSection">
+      <div class="card">
+        <h2>Generated Output</h2>
+        <div class="output-tabs">
+          <button class="output-tab active" data-tab="json">JSON Entry</button>
+          <button class="output-tab" data-tab="full">Full tokenlist.json</button>
+          <button class="output-tab" data-tab="pr">PR Instructions</button>
+        </div>
+        <div id="tab-json">
+          <pre><code id="jsonOutput"></code></pre>
+          <div style="margin-top: 10px; display: flex; gap: 8px;">
+            <button class="btn-copy" onclick="copyToClipboard('jsonOutput')">📋 Copy JSON</button>
+          </div>
+        </div>
+        <div id="tab-full" style="display:none">
+          <pre><code id="fullOutput"></code></pre>
+          <div style="margin-top: 10px; display: flex; gap: 8px;">
+            <button class="btn-copy" onclick="copyToClipboard('fullOutput')">📋 Copy Full Token List</button>
+            <button class="btn-copy" onclick="downloadJSON()">⬇ Download tokenlist.json</button>
+          </div>
+        </div>
+        <div id="tab-pr" style="display:none">
+          <pre><code id="prOutput"></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- GitHub PR Submission -->
+    <div class="output-section github-section" id="githubSection">
+      <div class="card">
+        <h2>🚀 Submit Pull Request</h2>
+
+        <div class="step-indicator">
+          <div class="step" id="step-fork">1. Fork</div>
+          <div class="step" id="step-branch">2. Branch</div>
+          <div class="step" id="step-commit">3. Commit</div>
+          <div class="step" id="step-pr">4. PR</div>
+        </div>
+
+        <div class="field">
+          <label for="ghToken">GitHub Personal Access Token</label>
+          <div class="token-input-row">
+            <div class="field">
+              <input id="ghToken" type="password" placeholder="ghp_xxxxxxxxxxxx">
+            </div>
+            <button type="button" class="btn-secondary" onclick="toggleTokenVisibility()" style="padding: 10px 12px;">👁</button>
+          </div>
+          <p class="hint">Needs <code>repo</code> and <code>workflow</code> scopes. <a href="https://github.com/settings/tokens/new?scopes=repo,workflow&description=Tempo+Token+List+PR" target="_blank" style="color:var(--accent)">Create one →</a></p>
+        </div>
+
+        <div class="field">
+          <label for="prTitle">PR Title</label>
+          <input id="prTitle" type="text" placeholder="Auto-generated from token name">
+        </div>
+
+        <div class="field">
+          <label for="prBody">PR Description (optional)</label>
+          <textarea id="prBody" rows="3" placeholder="Additional context about this token…"></textarea>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn-success" id="submitPRBtn" onclick="submitPR()">Submit PR to tempoxyz/tempo-apps</button>
+        </div>
+
+        <div class="pr-log" id="prLog" style="display:none"></div>
+        <div id="prResult"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Copied to clipboard!</div>
+
+  <script src="../config.local.js" onerror="window.TEMPO_CONFIG={}"></script>
+  <script>
+    const CHAIN_ID = 4217;
+    const LIST_URL = `https://tokenlist.tempo.xyz/list/${CHAIN_ID}`;
+    let currentList = null;
+    let uploadedSVG = null;
+
+    // --- Load current token list ---
+    async function loadTokenList() {
+      try {
+        const res = await fetch(LIST_URL);
+        currentList = await res.json();
+        renderTokenTable(currentList.tokens);
+      } catch (e) {
+        document.getElementById('currentTokens').innerHTML =
+          `<p style="color:var(--error)">Failed to load token list. <button class="btn-secondary" onclick="loadTokenList()">Retry</button></p>`;
+      }
+    }
+
+    function renderTokenTable(tokens) {
+      const el = document.getElementById('currentTokens');
+      document.getElementById('tokenCount').textContent = tokens.length;
+      el.innerHTML = `<table class="token-table">
+        <thead><tr><th></th><th>Name</th><th>Symbol</th><th>Decimals</th><th>Address</th></tr></thead>
+        <tbody>${tokens.map(t => `<tr>
+          <td><img class="token-icon" src="${t.logoURI}" alt="" onerror="this.style.display='none'"></td>
+          <td>${t.name}</td>
+          <td><strong>${t.symbol}</strong></td>
+          <td>${t.decimals}</td>
+          <td class="addr" title="${t.address}">${t.address.slice(0, 10)}…${t.address.slice(-6)} <img class="copy-icon" src="https://files.softicons.com/download/toolbar-icons/mono-general-icons-2-by-custom-icon-design/png/512x512/copy.png" onclick="navigator.clipboard.writeText('${t.address}').then(()=>showToast('Address copied!'))"></td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+    }
+
+    // --- SVG Upload ---
+    const dropZone = document.getElementById('dropZone');
+    const svgFile = document.getElementById('svgFile');
+
+    dropZone.addEventListener('click', () => svgFile.click());
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+    svgFile.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); });
+
+    function handleFile(file) {
+      if (!file.name.endsWith('.svg')) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        uploadedSVG = e.target.result;
+        document.getElementById('previewImg').src = uploadedSVG;
+        document.getElementById('previewName').textContent = file.name;
+        document.getElementById('iconPreview').style.display = 'flex';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // --- Validation ---
+    function isValidAddress(addr) {
+      return /^0x[0-9a-fA-F]{40}$/.test(addr);
+    }
+
+    // --- Staging Repository ---
+    function getStagingData() {
+      try { return JSON.parse(localStorage.getItem('tempo_staging') || '[]'); } catch { return []; }
+    }
+    function saveStagingData(data) {
+      localStorage.setItem('tempo_staging', JSON.stringify(data));
+    }
+
+    function addToStaging(token, svgData) {
+      const staging = getStagingData();
+      const entry = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), token, svgData: svgData || null, addedAt: new Date().toISOString() };
+      staging.push(entry);
+      saveStagingData(staging);
+      renderStagingTable();
+      showToast(`${token.symbol} added to staging`);
+    }
+
+    function removeFromStaging(id) {
+      const staging = getStagingData().filter(e => e.id !== id);
+      saveStagingData(staging);
+      renderStagingTable();
+    }
+
+    function renderStagingTable() {
+      const staging = getStagingData();
+      const el = document.getElementById('stagingTable');
+      const bulk = document.getElementById('stagingBulkActions');
+      document.getElementById('stagingCount').textContent = staging.length;
+
+      if (!staging.length) {
+        el.innerHTML = '<div class="empty-staging">No tokens staged yet. Submit a token above to add it here.</div>';
+        bulk.style.display = 'none';
+        return;
+      }
+      bulk.style.display = 'flex';
+      document.getElementById('selectAll').checked = false;
+      updateSelectedCount();
+
+      el.innerHTML = `<table class="token-table">
+        <thead><tr><th style="width:36px;"></th><th></th><th>Name</th><th>Symbol</th><th>Decimals</th><th>Address</th><th>SVG</th><th style="text-align:right;">Actions</th></tr></thead>
+        <tbody>${staging.map(e => `<tr>
+          <td><input type="checkbox" class="staging-check" data-id="${e.id}" onchange="updateSelectedCount()"></td>
+          <td><img class="token-icon" src="${e.token.logoURI}" alt="" onerror="this.style.display='none'"></td>
+          <td>${e.token.name}</td>
+          <td><strong>${e.token.symbol}</strong></td>
+          <td>${e.token.decimals}</td>
+          <td class="addr" title="${e.token.address}">${e.token.address.slice(0, 10)}…${e.token.address.slice(-6)}</td>
+          <td>${e.svgData ? '✅' : '—'}</td>
+          <td><div class="actions-cell"><button class="btn-sm generate" onclick="generateFromStaging('${e.id}')">Generate</button><button class="btn-sm delete" onclick="removeFromStaging('${e.id}')">Delete</button></div></td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+    }
+
+    function toggleSelectAll(checked) {
+      document.querySelectorAll('.staging-check').forEach(cb => cb.checked = checked);
+      updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+      const checked = document.querySelectorAll('.staging-check:checked').length;
+      const total = document.querySelectorAll('.staging-check').length;
+      const el = document.getElementById('selectedCount');
+      el.textContent = checked ? `${checked} of ${total} selected` : '';
+    }
+
+    function getSelectedIds() {
+      return [...document.querySelectorAll('.staging-check:checked')].map(cb => cb.dataset.id);
+    }
+
+    function deleteSelected() {
+      const ids = getSelectedIds();
+      if (!ids.length) { showToast('No entries selected'); return; }
+      const staging = getStagingData().filter(e => !ids.includes(e.id));
+      saveStagingData(staging);
+      renderStagingTable();
+      showToast(`${ids.length} entry(ies) deleted`);
+    }
+
+    function generateFromStaging(id) {
+      const staging = getStagingData();
+      const entry = staging.find(e => e.id === id);
+      if (!entry) return;
+      generateOutput([entry]);
+    }
+
+    function generateSelected() {
+      const ids = getSelectedIds();
+      if (!ids.length) { showToast('No entries selected'); return; }
+      const staging = getStagingData();
+      const entries = staging.filter(e => ids.includes(e.id));
+      generateOutput(entries);
+    }
+
+    function generateOutput(entries) {
+      const tokens = entries.map(e => e.token);
+
+      // JSON entry output
+      const jsonStr = tokens.length === 1
+        ? JSON.stringify(tokens[0], null, 2)
+        : JSON.stringify(tokens, null, 2);
+      document.getElementById('jsonOutput').textContent = jsonStr;
+
+      // Full token list output
+      if (currentList) {
+        const newList = JSON.parse(JSON.stringify(currentList));
+        tokens.forEach(t => newList.tokens.push(t));
+        newList.version.patch += tokens.length;
+        newList.timestamp = new Date().toISOString().split('.')[0] + 'Z';
+        document.getElementById('fullOutput').textContent = JSON.stringify(newList, null, 2);
+      } else {
+        document.getElementById('fullOutput').textContent = '(Could not load current list — only individual entry available)';
+      }
+
+      // PR instructions
+      const tokenNames = tokens.map(t => `${t.name} (${t.symbol})`).join(', ');
+      const iconList = tokens.map(t => `   apps/tokenlist/data/${CHAIN_ID}/icons/${t.address}.svg`).join('\n');
+      document.getElementById('prOutput').textContent =
+`Steps to submit ${tokens.length > 1 ? 'these tokens' : 'this token'}:
+
+1. Fork https://github.com/tempoxyz/tempo-apps
+
+2. Add token${tokens.length > 1 ? 's' : ''} to apps/tokenlist/data/${CHAIN_ID}/tokenlist.json:
+   — Append the JSON entr${tokens.length > 1 ? 'ies' : 'y'} above to the "tokens" array
+
+3. Add token icon${tokens.length > 1 ? 's' : ''} to:
+${iconList}
+   — Format: SVG, lowercase address filename
+   — Recommended: square aspect ratio, minimal whitespace
+
+4. Submit a Pull Request with a description of the token${tokens.length > 1 ? 's' : ''}`;
+
+      // Store for PR submission (use first token for single, or last for multi)
+      lastGeneratedToken = tokens.length === 1 ? tokens[0] : tokens[tokens.length - 1];
+
+      // Auto-fill PR title
+      document.getElementById('prTitle').value = tokens.length === 1
+        ? `tokenlist: add ${tokens[0].name} (${tokens[0].symbol})`
+        : `tokenlist: add ${tokens.length} tokens (${tokens.map(t => t.symbol).join(', ')})`;
+
+      // Show output + GitHub section
+      document.getElementById('outputSection').classList.add('visible');
+      document.getElementById('githubSection').classList.add('visible');
+      document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // --- Form Submit (to staging) ---
+    document.getElementById('tokenForm').addEventListener('submit', e => {
+      e.preventDefault();
+
+      const name = document.getElementById('name').value.trim();
+      const symbol = document.getElementById('symbol').value.trim();
+      const decimals = parseInt(document.getElementById('decimals').value);
+      const address = document.getElementById('address').value.trim().toLowerCase();
+      const logoURI = document.getElementById('logoURI').value.trim();
+      const extChain = document.getElementById('extChain').value.trim();
+      const extLabel = document.getElementById('extLabel').value.trim();
+
+      // Validate address
+      const addrInput = document.getElementById('address');
+      const addrHint = document.getElementById('addressHint');
+      if (!isValidAddress(address)) {
+        addrInput.classList.add('invalid');
+        addrHint.textContent = '⚠ Invalid address — must be 0x followed by 40 hex characters';
+        addrHint.classList.add('error');
+        return;
+      }
+      addrInput.classList.remove('invalid');
+      addrHint.textContent = 'Must be a valid hex address (0x + 40 hex chars)';
+      addrHint.classList.remove('error');
+
+      // Check for duplicate address
+      if (currentList) {
+        const exists = currentList.tokens.find(t => t.address.toLowerCase() === address);
+        if (exists) {
+          addrInput.classList.add('invalid');
+          addrHint.textContent = `⚠ Address already exists in token list as "${exists.name}" (${exists.symbol})`;
+          addrHint.classList.add('error');
+          return;
+        }
+      }
+
+      // Check staging duplicates
+      const staging = getStagingData();
+      const stagedDup = staging.find(e => e.token.address.toLowerCase() === address);
+      if (stagedDup) {
+        addrInput.classList.add('invalid');
+        addrHint.textContent = `⚠ Address already staged as "${stagedDup.token.name}" (${stagedDup.token.symbol})`;
+        addrHint.classList.add('error');
+        return;
+      }
+
+      // Build token entry
+      const token = {
+        name,
+        symbol,
+        decimals,
+        chainId: CHAIN_ID,
+        address,
+        logoURI: logoURI || `https://esm.sh/gh/tempoxyz/tempo-apps/apps/tokenlist/data/${CHAIN_ID}/icons/${address}.svg`,
+      };
+
+      const extensions = {};
+      if (extChain) extensions.chain = extChain;
+      if (extLabel) extensions.label = extLabel;
+      if (Object.keys(extensions).length > 0) token.extensions = extensions;
+
+      // Add to staging
+      addToStaging(token, uploadedSVG);
+
+      // Reset form
+      document.getElementById('tokenForm').reset();
+      document.getElementById('decimals').value = 6;
+      document.getElementById('extChain').value = 'tempo';
+      document.getElementById('iconPreview').style.display = 'none';
+      uploadedSVG = null;
+    });
+
+    // --- Tabs ---
+    document.querySelectorAll('.output-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.output-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-json').style.display = tab.dataset.tab === 'json' ? '' : 'none';
+        document.getElementById('tab-full').style.display = tab.dataset.tab === 'full' ? '' : 'none';
+        document.getElementById('tab-pr').style.display = tab.dataset.tab === 'pr' ? '' : 'none';
+      });
+    });
+
+    // --- Copy ---
+    function copyToClipboard(id) {
+      const text = document.getElementById(id).textContent;
+      navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'));
+    }
+
+    function downloadJSON() {
+      const text = document.getElementById('fullOutput').textContent;
+      const blob = new Blob([text], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'tokenlist.json';
+      a.click();
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    // --- Reset ---
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      document.getElementById('tokenForm').reset();
+      document.getElementById('decimals').value = 6;
+      document.getElementById('extChain').value = 'tempo';
+      document.getElementById('iconPreview').style.display = 'none';
+      uploadedSVG = null;
+    });
+
+    // --- GitHub PR Submission ---
+    const UPSTREAM_OWNER = 'tempoxyz';
+    const UPSTREAM_REPO = 'tempo-apps';
+    const TOKENLIST_PATH = `apps/tokenlist/data/${CHAIN_ID}/tokenlist.json`;
+    let lastGeneratedToken = null;
+
+    function toggleTokenVisibility() {
+      const inp = document.getElementById('ghToken');
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    function ghHeaders(token) {
+      return {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+      };
+    }
+
+    async function ghAPI(token, method, path, body) {
+      const res = await fetch(`https://api.github.com${path}`, {
+        method,
+        headers: { ...ghHeaders(token), 'Content-Type': 'application/json' },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || `GitHub API ${res.status}`);
+      return data;
+    }
+
+    function logPR(msg, cls = '') {
+      const log = document.getElementById('prLog');
+      log.style.display = 'block';
+      log.innerHTML += `<div class="log-line ${cls}">${msg}</div>`;
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function setStep(id, state) {
+      const el = document.getElementById(id);
+      el.classList.remove('active', 'done', 'error');
+      if (state) el.classList.add(state);
+    }
+
+    function resetSteps() {
+      ['step-fork', 'step-branch', 'step-commit', 'step-pr'].forEach(id => setStep(id, ''));
+      document.getElementById('prLog').innerHTML = '';
+      document.getElementById('prLog').style.display = 'none';
+      document.getElementById('prResult').innerHTML = '';
+    }
+
+    async function submitPR() {
+      const token = document.getElementById('ghToken').value.trim();
+      if (!token) { showToast('Enter a GitHub token'); return; }
+      if (!lastGeneratedToken) { showToast('Generate a token entry first'); return; }
+
+      const btn = document.getElementById('submitPRBtn');
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
+      resetSteps();
+
+      const addr = lastGeneratedToken.address;
+      const branchName = `add-token-${lastGeneratedToken.symbol.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${Date.now().toString(36)}`;
+
+      try {
+        // 1. Get authenticated user
+        logPR('Authenticating with GitHub…', 'info');
+        const user = await ghAPI(token, 'GET', '/user');
+        const forkOwner = user.login;
+        logPR(`Authenticated as ${forkOwner}`, 'ok');
+
+        // 2. Fork the repo (idempotent)
+        setStep('step-fork', 'active');
+        logPR(`Forking ${UPSTREAM_OWNER}/${UPSTREAM_REPO}…`, 'info');
+        try {
+          await ghAPI(token, 'POST', `/repos/${UPSTREAM_OWNER}/${UPSTREAM_REPO}/forks`, {});
+          logPR('Fork created (or already exists)', 'ok');
+        } catch (e) {
+          if (!e.message.includes('already exists')) throw e;
+          logPR('Fork already exists', 'ok');
+        }
+        setStep('step-fork', 'done');
+
+        // Wait for fork to be ready
+        logPR('Waiting for fork to be ready…', 'info');
+        let forkReady = false;
+        for (let i = 0; i < 15; i++) {
+          try {
+            await ghAPI(token, 'GET', `/repos/${forkOwner}/${UPSTREAM_REPO}`);
+            forkReady = true;
+            break;
+          } catch { await new Promise(r => setTimeout(r, 2000)); }
+        }
+        if (!forkReady) throw new Error('Fork not ready after 30s. Try again.');
+        logPR('Fork is ready', 'ok');
+
+        // 3. Get default branch and its SHA
+        setStep('step-branch', 'active');
+        const upstream = await ghAPI(token, 'GET', `/repos/${UPSTREAM_OWNER}/${UPSTREAM_REPO}`);
+        const defaultBranch = upstream.default_branch;
+        const mainRef = await ghAPI(token, 'GET', `/repos/${forkOwner}/${UPSTREAM_REPO}/git/ref/heads/${defaultBranch}`);
+        const baseSha = mainRef.object.sha;
+        logPR(`Base branch: ${defaultBranch} @ ${baseSha.slice(0, 7)}`, 'ok');
+
+        // Create new branch
+        logPR(`Creating branch ${branchName}…`, 'info');
+        await ghAPI(token, 'POST', `/repos/${forkOwner}/${UPSTREAM_REPO}/git/refs`, {
+          ref: `refs/heads/${branchName}`,
+          sha: baseSha,
+        });
+        setStep('step-branch', 'done');
+        logPR('Branch created', 'ok');
+
+        // 4. Commit files
+        setStep('step-commit', 'active');
+
+        // Get current tokenlist.json from upstream
+        logPR('Fetching current tokenlist.json from upstream…', 'info');
+        const fileData = await ghAPI(token, 'GET', `/repos/${UPSTREAM_OWNER}/${UPSTREAM_REPO}/contents/${TOKENLIST_PATH}?ref=${defaultBranch}`);
+        const existingContent = JSON.parse(atob(fileData.content.replace(/\n/g, '')));
+
+        // Add new token
+        existingContent.tokens.push(lastGeneratedToken);
+        existingContent.version.patch += 1;
+        existingContent.timestamp = new Date().toISOString().split('.')[0] + 'Z';
+        const newContent = JSON.stringify(existingContent, null, 2) + '\n';
+
+        // Build tree with tokenlist.json
+        const blobs = [];
+
+        // tokenlist.json blob
+        const tokenlistBlob = await ghAPI(token, 'POST', `/repos/${forkOwner}/${UPSTREAM_REPO}/git/blobs`, {
+          content: btoa(unescape(encodeURIComponent(newContent))),
+          encoding: 'base64',
+        });
+        blobs.push({
+          path: TOKENLIST_PATH,
+          mode: '100644',
+          type: 'blob',
+          sha: tokenlistBlob.sha,
+        });
+        logPR('tokenlist.json blob created', 'ok');
+
+        // SVG icon blob (if uploaded)
+        if (uploadedSVG) {
+          const svgRaw = uploadedSVG.includes(',') ? uploadedSVG.split(',')[1] : uploadedSVG;
+          // Re-encode: the data URL is base64-encoded SVG
+          const iconPath = `apps/tokenlist/data/${CHAIN_ID}/icons/${addr}.svg`;
+          const iconBlob = await ghAPI(token, 'POST', `/repos/${forkOwner}/${UPSTREAM_REPO}/git/blobs`, {
+            content: svgRaw,
+            encoding: 'base64',
+          });
+          blobs.push({
+            path: iconPath,
+            mode: '100644',
+            type: 'blob',
+            sha: iconBlob.sha,
+          });
+          logPR('Icon SVG blob created', 'ok');
+        }
+
+        // Create tree
+        const tree = await ghAPI(token, 'POST', `/repos/${forkOwner}/${UPSTREAM_REPO}/git/trees`, {
+          base_tree: baseSha,
+          tree: blobs,
+        });
+        logPR('Git tree created', 'ok');
+
+        // Create commit
+        const commitMsg = `tokenlist: add ${lastGeneratedToken.name} (${lastGeneratedToken.symbol})`;
+        const commit = await ghAPI(token, 'POST', `/repos/${forkOwner}/${UPSTREAM_REPO}/git/commits`, {
+          message: commitMsg,
+          tree: tree.sha,
+          parents: [baseSha],
+        });
+        logPR(`Commit created: ${commit.sha.slice(0, 7)}`, 'ok');
+
+        // Update branch ref
+        await ghAPI(token, 'PATCH', `/repos/${forkOwner}/${UPSTREAM_REPO}/git/refs/heads/${branchName}`, {
+          sha: commit.sha,
+        });
+        setStep('step-commit', 'done');
+
+        // 5. Create Pull Request
+        setStep('step-pr', 'active');
+        logPR('Creating Pull Request…', 'info');
+        const prTitle = document.getElementById('prTitle').value.trim()
+          || `tokenlist: add ${lastGeneratedToken.name} (${lastGeneratedToken.symbol})`;
+        const prBodyText = document.getElementById('prBody').value.trim();
+        const prDescription = `## Add Token: ${lastGeneratedToken.name} (${lastGeneratedToken.symbol})
+
+| Field | Value |
+|-------|-------|
+| **Name** | ${lastGeneratedToken.name} |
+| **Symbol** | ${lastGeneratedToken.symbol} |
+| **Decimals** | ${lastGeneratedToken.decimals} |
+| **Chain ID** | ${CHAIN_ID} |
+| **Address** | \`${addr}\` |
+
+${prBodyText ? `### Notes\n${prBodyText}\n` : ''}
+---
+*Submitted via [Tempo Token List GUI](https://tokenlist.tempo.xyz/list/${CHAIN_ID})*`;
+
+        const pr = await ghAPI(token, 'POST', `/repos/${UPSTREAM_OWNER}/${UPSTREAM_REPO}/pulls`, {
+          title: prTitle,
+          body: prDescription,
+          head: `${forkOwner}:${branchName}`,
+          base: defaultBranch,
+        });
+        setStep('step-pr', 'done');
+        logPR(`✅ PR #${pr.number} created!`, 'ok');
+
+        document.getElementById('prResult').innerHTML =
+          `<div class="pr-status success">
+            ✅ <strong>Pull Request #${pr.number} created!</strong><br>
+            <a href="${pr.html_url}" target="_blank">${pr.html_url}</a>
+          </div>`;
+
+      } catch (err) {
+        logPR(`❌ Error: ${err.message}`, 'err');
+        ['step-fork', 'step-branch', 'step-commit', 'step-pr'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el.classList.contains('active')) setStep(id, 'error');
+        });
+        document.getElementById('prResult').innerHTML =
+          `<div class="pr-status error">❌ ${err.message}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Submit PR to tempoxyz/tempo-apps';
+      }
+    }
+
+    // --- Paste JSON Import ---
+    function importJSON() {
+      const raw = document.getElementById('pasteJson').value.trim();
+      const hint = document.getElementById('pasteHint');
+      if (!raw) { hint.textContent = '⚠ Paste a JSON token entry first'; hint.classList.add('error'); return; }
+
+      let token;
+      try {
+        token = JSON.parse(raw);
+      } catch (e) {
+        hint.textContent = '⚠ Invalid JSON: ' + e.message;
+        hint.classList.add('error');
+        return;
+      }
+
+      if (!token.name || !token.symbol || !token.address) {
+        hint.textContent = '⚠ JSON must include at least "name", "symbol", and "address"';
+        hint.classList.add('error');
+        return;
+      }
+
+      // Populate the form
+      document.getElementById('name').value = token.name;
+      document.getElementById('symbol').value = token.symbol;
+      document.getElementById('decimals').value = token.decimals ?? 6;
+      document.getElementById('address').value = token.address;
+      document.getElementById('logoURI').value = token.logoURI || '';
+      document.getElementById('extChain').value = token.extensions?.chain || 'tempo';
+      document.getElementById('extLabel').value = token.extensions?.label || '';
+
+      hint.textContent = '✅ JSON imported — fields populated above. Click "Generate Token Entry" to continue.';
+      hint.classList.remove('error');
+      hint.style.color = 'var(--success)';
+    }
+
+    // --- Theme Toggle ---
+    function toggleTheme() {
+      const root = document.documentElement;
+      const btn = document.getElementById('themeToggle');
+      root.classList.toggle('light');
+      const isLight = root.classList.contains('light');
+      btn.textContent = isLight ? '🌙 Dark' : '☀️ Light';
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    }
+    // Restore saved theme
+    if (localStorage.getItem('theme') === 'light') {
+      document.documentElement.classList.add('light');
+      document.getElementById('themeToggle').textContent = '🌙 Dark';
+    }
+
+    // --- Init ---
+    loadTokenList();
+    renderStagingTable();
+
+    // Auto-fill from config.local.js
+    if (window.TEMPO_CONFIG) {
+      if (TEMPO_CONFIG.GITHUB_TOKEN) document.getElementById('ghToken').value = TEMPO_CONFIG.GITHUB_TOKEN;
+    }
+  </script>
+</body>
+</html>
