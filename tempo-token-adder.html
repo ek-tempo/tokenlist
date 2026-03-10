@@ -225,8 +225,7 @@
     }
     .btn-success:hover { background: #16a34a; }
 
-    .github-section { margin-top: 0; display: none; }
-    .github-section.visible { display: block; }
+    .github-section { margin-top: 0; }
     .step-indicator {
       display: flex;
       gap: 0;
@@ -282,6 +281,24 @@
     .token-input-row .field { flex: 1; margin-bottom: 0; }
     .token-input-row button { margin-bottom: 0; flex-shrink: 0; height: 42px; }
 
+    .output-section { display: none; }
+    .output-section.visible { display: block; }
+    .output-section h2 { margin-bottom: 12px; }
+    .output-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+    .output-tab {
+      padding: 6px 16px;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      font-size: 0.82rem;
+      font-weight: 500;
+    }
+    .output-tab.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
     pre {
       background: var(--bg);
       border: 1px solid var(--border);
@@ -360,6 +377,49 @@
     }
     .copy-icon:hover { opacity: 1; }
 
+    .staging-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .staging-actions .count {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+    .token-table input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .token-table .actions-cell {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .btn-sm.generate { background: var(--accent); color: #fff; }
+    .btn-sm.generate:hover { background: var(--accent-hover); }
+    .btn-sm.delete { background: transparent; color: var(--error); border: 1px solid var(--error); }
+    .btn-sm.delete:hover { background: rgba(239,68,68,0.1); }
+    .empty-staging {
+      text-align: center;
+      padding: 24px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
     .loading .spinner {
       display: inline-block;
       width: 20px;
@@ -445,14 +505,72 @@
         </div>
       </div>
 
+      <div class="field" style="margin-top: 12px; padding-top: 18px; border-top: 1px dashed var(--border);">
+        <label for="pasteJson">Or Paste Token JSON</label>
+        <textarea id="pasteJson" rows="6" placeholder='{
+  "name": "My Token",
+  "symbol": "MTK",
+  "decimals": 6,
+  "chainId": 4217,
+  "address": "0x20c0...",
+  "extensions": { "chain": "tempo" }
+}'></textarea>
+        <div class="actions" style="margin-top: 8px;">
+          <button type="button" class="btn-secondary" onclick="importJSON()">Import JSON</button>
+        </div>
+        <p class="hint" id="pasteHint" style="margin-top:6px;"></p>
+      </div>
+
       <div class="actions" style="margin-top: 20px;">
-        <button type="submit" class="btn-primary">Add to Tokenlist</button>
+        <button type="submit" class="btn-primary">Add to Staging</button>
         <button type="button" class="btn-secondary" id="resetBtn">Reset</button>
       </div>
     </form>
 
+    <!-- Staging Area -->
+    <div class="card">
+      <h2>Staging Area <span class="badge" id="stagingCount">0</span></h2>
+      <div class="staging-actions" id="stagingBulkActions" style="display:none;">
+        <label style="font-size:0.82rem;color:var(--text-muted);display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this.checked)"> Select All
+        </label>
+        <button class="btn-sm generate" onclick="generateSelected()">Generate Selected</button>
+        <button class="btn-sm delete" onclick="deleteSelected()">Delete Selected</button>
+        <span class="count" id="selectedCount"></span>
+      </div>
+      <div id="stagingTable"></div>
+    </div>
+
+    <!-- Output -->
+    <div class="output-section" id="outputSection">
+      <div class="card">
+        <h2>Generated Output</h2>
+        <div class="output-tabs">
+          <button class="output-tab active" data-tab="json">JSON Entry</button>
+          <button class="output-tab" data-tab="full">Full tokenlist.json</button>
+          <button class="output-tab" data-tab="pr">PR Instructions</button>
+        </div>
+        <div id="tab-json">
+          <pre><code id="jsonOutput"></code></pre>
+          <div style="margin-top: 10px; display: flex; gap: 8px;">
+            <button class="btn-copy" onclick="copyToClipboard('jsonOutput')">📋 Copy JSON</button>
+          </div>
+        </div>
+        <div id="tab-full" style="display:none">
+          <pre><code id="fullOutput"></code></pre>
+          <div style="margin-top: 10px; display: flex; gap: 8px;">
+            <button class="btn-copy" onclick="copyToClipboard('fullOutput')">📋 Copy Full Token List</button>
+            <button class="btn-copy" onclick="downloadJSON()">⬇ Download tokenlist.json</button>
+          </div>
+        </div>
+        <div id="tab-pr" style="display:none">
+          <pre><code id="prOutput"></code></pre>
+        </div>
+      </div>
+    </div>
+
     <!-- GitHub PR Submission -->
-    <div class="github-section" id="githubSection">
+    <div class="output-section github-section" id="githubSection">
       <div class="card">
         <h2>🚀 Submit Pull Request</h2>
 
@@ -496,7 +614,7 @@
 
   <div class="toast" id="toast">Copied to clipboard!</div>
 
-  <script src="config.local.js" onerror="window.TEMPO_CONFIG={}"></script>
+  <script src="../config.local.js" onerror="window.TEMPO_CONFIG={}"></script>
   <script>
     const CHAIN_ID = 4217;
     const LIST_URL = `https://tokenlist.tempo.xyz/list/${CHAIN_ID}`;
@@ -572,7 +690,152 @@
       return /^0x[0-9a-fA-F]{40}$/.test(addr);
     }
 
-    // --- Form Submit ---
+    // --- Staging Repository ---
+    function getStagingData() {
+      try { return JSON.parse(localStorage.getItem('tempo_staging') || '[]'); } catch { return []; }
+    }
+    function saveStagingData(data) {
+      localStorage.setItem('tempo_staging', JSON.stringify(data));
+    }
+
+    function addToStaging(token, svgData) {
+      const staging = getStagingData();
+      const entry = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), token, svgData: svgData || null, addedAt: new Date().toISOString() };
+      staging.push(entry);
+      saveStagingData(staging);
+      renderStagingTable();
+      showToast(`${token.symbol} added to staging`);
+    }
+
+    function removeFromStaging(id) {
+      const staging = getStagingData().filter(e => e.id !== id);
+      saveStagingData(staging);
+      renderStagingTable();
+    }
+
+    function renderStagingTable() {
+      const staging = getStagingData();
+      const el = document.getElementById('stagingTable');
+      const bulk = document.getElementById('stagingBulkActions');
+      document.getElementById('stagingCount').textContent = staging.length;
+
+      if (!staging.length) {
+        el.innerHTML = '<div class="empty-staging">No tokens staged yet. Submit a token above to add it here.</div>';
+        bulk.style.display = 'none';
+        return;
+      }
+      bulk.style.display = 'flex';
+      document.getElementById('selectAll').checked = false;
+      updateSelectedCount();
+
+      el.innerHTML = `<table class="token-table">
+        <thead><tr><th style="width:36px;"></th><th></th><th>Name</th><th>Symbol</th><th>Decimals</th><th>Address</th><th>SVG</th><th style="text-align:right;">Actions</th></tr></thead>
+        <tbody>${staging.map(e => `<tr>
+          <td><input type="checkbox" class="staging-check" data-id="${e.id}" onchange="updateSelectedCount()"></td>
+          <td><img class="token-icon" src="${e.token.logoURI}" alt="" onerror="this.style.display='none'"></td>
+          <td>${e.token.name}</td>
+          <td><strong>${e.token.symbol}</strong></td>
+          <td>${e.token.decimals}</td>
+          <td class="addr" title="${e.token.address}">${e.token.address.slice(0, 10)}…${e.token.address.slice(-6)}</td>
+          <td>${e.svgData ? '✅' : '—'}</td>
+          <td><div class="actions-cell"><button class="btn-sm generate" onclick="generateFromStaging('${e.id}')">Generate</button><button class="btn-sm delete" onclick="removeFromStaging('${e.id}')">Delete</button></div></td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+    }
+
+    function toggleSelectAll(checked) {
+      document.querySelectorAll('.staging-check').forEach(cb => cb.checked = checked);
+      updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+      const checked = document.querySelectorAll('.staging-check:checked').length;
+      const total = document.querySelectorAll('.staging-check').length;
+      const el = document.getElementById('selectedCount');
+      el.textContent = checked ? `${checked} of ${total} selected` : '';
+    }
+
+    function getSelectedIds() {
+      return [...document.querySelectorAll('.staging-check:checked')].map(cb => cb.dataset.id);
+    }
+
+    function deleteSelected() {
+      const ids = getSelectedIds();
+      if (!ids.length) { showToast('No entries selected'); return; }
+      const staging = getStagingData().filter(e => !ids.includes(e.id));
+      saveStagingData(staging);
+      renderStagingTable();
+      showToast(`${ids.length} entry(ies) deleted`);
+    }
+
+    function generateFromStaging(id) {
+      const staging = getStagingData();
+      const entry = staging.find(e => e.id === id);
+      if (!entry) return;
+      generateOutput([entry]);
+    }
+
+    function generateSelected() {
+      const ids = getSelectedIds();
+      if (!ids.length) { showToast('No entries selected'); return; }
+      const staging = getStagingData();
+      const entries = staging.filter(e => ids.includes(e.id));
+      generateOutput(entries);
+    }
+
+    function generateOutput(entries) {
+      const tokens = entries.map(e => e.token);
+
+      // JSON entry output
+      const jsonStr = tokens.length === 1
+        ? JSON.stringify(tokens[0], null, 2)
+        : JSON.stringify(tokens, null, 2);
+      document.getElementById('jsonOutput').textContent = jsonStr;
+
+      // Full token list output
+      if (currentList) {
+        const newList = JSON.parse(JSON.stringify(currentList));
+        tokens.forEach(t => newList.tokens.push(t));
+        newList.version.patch += tokens.length;
+        newList.timestamp = new Date().toISOString().split('.')[0] + 'Z';
+        document.getElementById('fullOutput').textContent = JSON.stringify(newList, null, 2);
+      } else {
+        document.getElementById('fullOutput').textContent = '(Could not load current list — only individual entry available)';
+      }
+
+      // PR instructions
+      const tokenNames = tokens.map(t => `${t.name} (${t.symbol})`).join(', ');
+      const iconList = tokens.map(t => `   apps/tokenlist/data/${CHAIN_ID}/icons/${t.address}.svg`).join('\n');
+      document.getElementById('prOutput').textContent =
+`Steps to submit ${tokens.length > 1 ? 'these tokens' : 'this token'}:
+
+1. Fork https://github.com/tempoxyz/tempo-apps
+
+2. Add token${tokens.length > 1 ? 's' : ''} to apps/tokenlist/data/${CHAIN_ID}/tokenlist.json:
+   — Append the JSON entr${tokens.length > 1 ? 'ies' : 'y'} above to the "tokens" array
+
+3. Add token icon${tokens.length > 1 ? 's' : ''} to:
+${iconList}
+   — Format: SVG, lowercase address filename
+   — Recommended: square aspect ratio, minimal whitespace
+
+4. Submit a Pull Request with a description of the token${tokens.length > 1 ? 's' : ''}`;
+
+      // Store for PR submission (use first token for single, or last for multi)
+      lastGeneratedToken = tokens.length === 1 ? tokens[0] : tokens[tokens.length - 1];
+
+      // Auto-fill PR title
+      document.getElementById('prTitle').value = tokens.length === 1
+        ? `tokenlist: add ${tokens[0].name} (${tokens[0].symbol})`
+        : `tokenlist: add ${tokens.length} tokens (${tokens.map(t => t.symbol).join(', ')})`;
+
+      // Show output + GitHub section
+      document.getElementById('outputSection').classList.add('visible');
+      document.getElementById('githubSection').classList.add('visible');
+      document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // --- Form Submit (to staging) ---
     document.getElementById('tokenForm').addEventListener('submit', e => {
       e.preventDefault();
 
@@ -608,6 +871,16 @@
         }
       }
 
+      // Check staging duplicates
+      const staging = getStagingData();
+      const stagedDup = staging.find(e => e.token.address.toLowerCase() === address);
+      if (stagedDup) {
+        addrInput.classList.add('invalid');
+        addrHint.textContent = `⚠ Address already staged as "${stagedDup.token.name}" (${stagedDup.token.symbol})`;
+        addrHint.classList.add('error');
+        return;
+      }
+
       // Build token entry
       const token = {
         name,
@@ -623,31 +896,42 @@
       if (extLabel) extensions.label = extLabel;
       if (Object.keys(extensions).length > 0) token.extensions = extensions;
 
-      // Store for PR submission
-      lastGeneratedToken = token;
+      // Add to staging
+      addToStaging(token, uploadedSVG);
 
-      // Show confirmation
-      const confirmed = confirm(
-        `Add this token to the Tempo Tokenlist?\n\n` +
-        `Name: ${token.name}\n` +
-        `Symbol: ${token.symbol}\n` +
-        `Decimals: ${token.decimals}\n` +
-        `Address: ${token.address}\n` +
-        `Logo: ${token.logoURI}\n` +
-        (uploadedSVG ? `SVG Icon: ✅ uploaded\n` : '') +
-        (token.extensions ? `Extensions: ${JSON.stringify(token.extensions)}\n` : '') +
-        `\nThis will create a PR to tempoxyz/tempo-apps.`
-      );
-
-      if (!confirmed) return;
-
-      // Auto-fill PR title
-      document.getElementById('prTitle').value = `tokenlist: add ${token.name} (${token.symbol})`;
-
-      // Show GitHub section and scroll to it
-      document.getElementById('githubSection').classList.add('visible');
-      document.getElementById('githubSection').scrollIntoView({ behavior: 'smooth' });
+      // Reset form
+      document.getElementById('tokenForm').reset();
+      document.getElementById('decimals').value = 6;
+      document.getElementById('extChain').value = 'tempo';
+      document.getElementById('iconPreview').style.display = 'none';
+      uploadedSVG = null;
     });
+
+    // --- Tabs ---
+    document.querySelectorAll('.output-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.output-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-json').style.display = tab.dataset.tab === 'json' ? '' : 'none';
+        document.getElementById('tab-full').style.display = tab.dataset.tab === 'full' ? '' : 'none';
+        document.getElementById('tab-pr').style.display = tab.dataset.tab === 'pr' ? '' : 'none';
+      });
+    });
+
+    // --- Copy ---
+    function copyToClipboard(id) {
+      const text = document.getElementById(id).textContent;
+      navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'));
+    }
+
+    function downloadJSON() {
+      const text = document.getElementById('fullOutput').textContent;
+      const blob = new Blob([text], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'tokenlist.json';
+      a.click();
+    }
 
     function showToast(msg) {
       const t = document.getElementById('toast');
@@ -896,6 +1180,41 @@ ${prBodyText ? `### Notes\n${prBodyText}\n` : ''}
       }
     }
 
+    // --- Paste JSON Import ---
+    function importJSON() {
+      const raw = document.getElementById('pasteJson').value.trim();
+      const hint = document.getElementById('pasteHint');
+      if (!raw) { hint.textContent = '⚠ Paste a JSON token entry first'; hint.classList.add('error'); return; }
+
+      let token;
+      try {
+        token = JSON.parse(raw);
+      } catch (e) {
+        hint.textContent = '⚠ Invalid JSON: ' + e.message;
+        hint.classList.add('error');
+        return;
+      }
+
+      if (!token.name || !token.symbol || !token.address) {
+        hint.textContent = '⚠ JSON must include at least "name", "symbol", and "address"';
+        hint.classList.add('error');
+        return;
+      }
+
+      // Populate the form
+      document.getElementById('name').value = token.name;
+      document.getElementById('symbol').value = token.symbol;
+      document.getElementById('decimals').value = token.decimals ?? 6;
+      document.getElementById('address').value = token.address;
+      document.getElementById('logoURI').value = token.logoURI || '';
+      document.getElementById('extChain').value = token.extensions?.chain || 'tempo';
+      document.getElementById('extLabel').value = token.extensions?.label || '';
+
+      hint.textContent = '✅ JSON imported — fields populated above. Click "Generate Token Entry" to continue.';
+      hint.classList.remove('error');
+      hint.style.color = 'var(--success)';
+    }
+
     // --- Theme Toggle ---
     function toggleTheme() {
       const root = document.documentElement;
@@ -913,6 +1232,7 @@ ${prBodyText ? `### Notes\n${prBodyText}\n` : ''}
 
     // --- Init ---
     loadTokenList();
+    renderStagingTable();
 
     // Auto-fill from config.local.js
     if (window.TEMPO_CONFIG) {
